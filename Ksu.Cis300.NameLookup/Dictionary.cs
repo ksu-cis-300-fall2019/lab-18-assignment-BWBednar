@@ -1,5 +1,6 @@
 ﻿/* Dictionary.cs
  * Author: Rod Howell
+ * Edited by: Brandon Bednar
  */
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,91 @@ namespace Ksu.Cis300.NameLookup
         public TreeForm Drawing => new TreeForm(_elements, 100);
 
         /// <summary>
+        /// removes the minimum key from the binary tree node being checked
+        /// </summary>
+        /// <param name="t">the binary tree node</param>
+        /// <param name="min">the min value</param>
+        /// <returns>the minimum value from the tree</returns>
+        private static BinaryTreeNode<KeyValuePair<TKey, TValue>> RemoveMininumKey(BinaryTreeNode<KeyValuePair<TKey, TValue>> t, out KeyValuePair<TKey, TValue> min)
+        {
+            if (t.LeftChild != null)
+            {
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> updatedLeft = RemoveMininumKey(t.LeftChild, out min);
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> updated = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(t.Data, updatedLeft, t.RightChild);
+                return updated;
+            }
+            else
+            {
+                min = t.Data;
+                return t.RightChild;
+            }
+        }
+
+        /// <summary>
+        /// removes the binary tree node from the position and returns a new tree
+        /// </summary>
+        /// <param name="key"> the key being looked fro</param>
+        /// <param name="tree">the tree being examined</param>
+        /// <param name="removed">if a tree node has been removed</param>
+        /// <returns>an updated tree</returns>
+        public BinaryTreeNode<KeyValuePair<TKey, TValue>> Remove(TKey key, BinaryTreeNode<KeyValuePair<TKey, TValue>> tree, out bool removed)
+        {
+            if (tree == null)
+            {
+                removed = false;
+                return null;
+            }
+            else if (tree.Data.Key.CompareTo(key) < 0)
+            {
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> rightUpdated = Remove(key, tree.RightChild, out removed);
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> updated = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(tree.Data, tree.LeftChild, rightUpdated);
+                return updated;
+            }
+            else if (tree.Data.Key.CompareTo(key) > 0)
+            {
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> leftUpdated = Remove(key, tree.LeftChild, out removed);
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> updated = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(tree.Data, leftUpdated, tree.RightChild);
+                return updated;
+            }
+            else
+            {
+                removed = true;
+                if (tree.LeftChild == null && tree.RightChild == null)
+                {
+                    return null;
+                }
+                else if (tree.LeftChild != null && tree.RightChild == null)
+                {
+                    return tree.LeftChild;
+                }
+                else if (tree.LeftChild == null && tree.RightChild != null)
+                {
+                    return tree.RightChild;
+                }
+                else
+                {
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> rightUpdated = RemoveMininumKey(tree.RightChild, out KeyValuePair<TKey, TValue> min);
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> updated = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(min, tree.LeftChild, rightUpdated);
+                    return updated;
+                }
+            }
+            
+        }
+
+        /// <summary>
+        /// removes the k from _elements using other methods if possible
+        /// </summary>
+        /// <param name="k">the key being removed</param>
+        /// <returns>if the key was able to be removed</returns>
+        public bool Remove(TKey k)
+        {
+            CheckKey(k);
+            bool removed;
+            _elements = Remove(k, _elements, out removed);
+            return removed;
+        }
+
+        /// <summary>
         /// Checks to see if the given key is null, and if so, throws an
         /// ArgumentNullException.
         /// </summary>
@@ -40,6 +126,7 @@ namespace Ksu.Cis300.NameLookup
                 throw new ArgumentNullException();
             }
         }
+
 
         /// <summary>
         /// Finds the given key in the given binary search tree.
